@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Navigation Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        /* ... Your CSS styles ... */
+    </style>
+</head>
+<body>
+
+    <div id="content">
+        <button class="button" onclick="loadContent('borrower')">Borrower Page</button>
+        <button class="button" onclick="loadContent('guarantee')">Guarantee Page</button>
+        <button class="button" onclick="loadContent('lender')">Lender Page</button>
+    </div>
+
+    <script type="application/javascript">
+        function loadContent(page) {
+            $.ajax({
+                url: '/' + page,
+                type: 'GET',
+                success: function(response) {
+                    $('#content').html(response);
+                },
+                error: function(error) {
+                    console.log('Error:', error);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

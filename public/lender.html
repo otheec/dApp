@@ -1,0 +1,197 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+
+<div id="buttons">
+    <button id="connectButton" onclick="connectToMetaMask()">Connect to MetaMask</button><br/>
+</div>
+<div id="balance">
+    Balance: <span id="ethBalance">0</span> Tokens
+</div>
+
+<div id="loansWithoutLender">
+    <h3>Offers</h3>
+    <button id="showLoansWithoutLenderButton" onclick="showLoansWithoutLender()">Show Offers</button><br/>
+    <table id="loansWithoutLenderTable" border="1">
+        <thead>
+            <tr>
+                <th>Loan ID</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Offered Interest</th>
+                <th>Guarantor</th>
+                <th>Borrower</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<div id="myLoans">
+    <h3>My Loans</h3>
+    <button id="showLoansButton" onclick="showMyLoans()">Show All Loans</button><br/>
+    <table id="myLoansTable" border="1">
+        <thead>
+            <tr>
+                <th>Loan ID</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Offered Interest</th>
+                <th>Guarantor</th>
+                <th>Borrower</th>
+                <th>Already Paid</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script type="application/javascript">
+
+    const loanScAddress = "0x5738f2076776feefea86dC271D089Ee077F08741";
+    const loanScABI = [{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"acceptGuarantee","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"claimCollateral","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"CollateralClaimed","type":"event"},{"inputs":[{"internalType":"uint256","name":"_dueDate","type":"uint256"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint256","name":"_interest","type":"uint256"}],"name":"createNewLoan","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"denyGuarantee","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"GuaranteeAccepted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"GuaranteeDenied","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"},{"indexed":false,"internalType":"address","name":"guarantor","type":"address"}],"name":"GuaranteeOffered","type":"event"},{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"lenderAcceptLoan","outputs":[],"stateMutability":"payable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"LoanCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LoanPaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"loanId","type":"uint256"},{"indexed":false,"internalType":"address","name":"lender","type":"address"}],"name":"LoanStarted","type":"event"},{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"},{"internalType":"uint256","name":"guaranteeInterest","type":"uint256"}],"name":"offerGuarantee","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"loanId","type":"uint256"}],"name":"payLoan","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getAcceptedGuaranteedLoansWithoutLender","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAllLoans","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getBorrowerLoans","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getGuarantorLoans","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getLenderLoans","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getLoansWithoutGuarantee","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"internalType":"struct AssigmentP2P.Loan[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"loanCounter","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"loans","outputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"dueDate","type":"uint256"},{"internalType":"address","name":"borrower","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"interest","type":"uint256"},{"internalType":"uint256","name":"alreadyPaid","type":"uint256"},{"internalType":"address","name":"guarantor","type":"address"},{"internalType":"uint256","name":"guarantorInterest","type":"uint256"},{"internalType":"bool","name":"guarantorAccepted","type":"bool"},{"internalType":"address","name":"lender","type":"address"}],"stateMutability":"view","type":"function"}];
+    
+    let loanContract, account;
+
+    async function connectToMetaMask() {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            account = accounts[0];
+            alert('MetaMask connected!');
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner(); // Initialize the signer
+            loanContract = new ethers.Contract(loanScAddress, loanScABI, signer);
+            showEthBalance(account, provider);
+        } catch (error) {
+            alert('MetaMask connection error: ' + error.message);
+        }
+    }
+
+    async function showEthBalance(account, provider) {
+        try {
+            const balance = await provider.getBalance(account);
+            const ethBalance = ethers.utils.formatEther(balance); // Converts the balance from wei to ether
+            document.getElementById('ethBalance').innerText = ethBalance + ' ETH';
+        } catch (error) {
+            console.error('Error getting ETH balance:', error);
+        }
+    }
+
+    async function showLoansWithoutLender() {
+        try {
+            const loans = await loanContract.getAcceptedGuaranteedLoansWithoutLender()
+
+            const myLoansTableBody = document.getElementById('loansWithoutLenderTable').getElementsByTagName('tbody')[0];
+            myLoansTableBody.innerHTML = ''; // Clear existing rows
+
+            loans.forEach((loan) => {
+                const row = myLoansTableBody.insertRow();
+
+                const idCell = row.insertCell(0);
+                idCell.innerText = loan.id;
+
+                const dueDateCell = row.insertCell(1);
+                dueDateCell.innerText = new Date(loan.dueDate * 1000).toLocaleString(); // Convert timestamp to readable date
+
+                const amountCell = row.insertCell(2);
+                amountCell.innerText = loan.amount;
+
+                const lenderInterestCell = row.insertCell(3);
+                lenderInterestCell.innerText = Number(loan.interest) - Number(loan.guarantorInterest);
+
+                const guarantorCell = row.insertCell(4);
+                guarantorCell.innerText = loan.guarantor;
+
+                const borrowerCell = row.insertCell(5);
+                borrowerCell.innerText = loan.borrower;
+
+                const lendCell = row.insertCell(6);
+                var lendeButton = document.createElement("button");
+                lendeButton.textContent = "Lend";
+                lendeButton.addEventListener('click', () => lend(loan.id));
+                lendCell.appendChild(lendeButton);
+            });
+        } catch (error) {
+            console.error('Error showing loans without lender:', error);
+            alert('Error showing loans without lender: ' + error.message);
+        }
+    }
+
+    async function lend(loanId) {
+        try {
+            const loan = await loanContract.loans(loanId);
+            const loanAmount = ethers.utils.formatUnits(loan.amount, 'wei');
+
+            const tx = await loanContract.lenderAcceptLoan(loanId, { value: loanAmount });
+            await tx.wait();
+
+            alert('Money landed successfully!');
+        } catch (error) {
+            console.error('Error landing money:', error);
+            alert('Error landing money: ' + error.message);
+        }
+    }
+
+    async function showMyLoans() {
+        try {
+            const loans = await loanContract.getLenderLoans();
+            const myLoansTableBody = document.getElementById('myLoansTable').getElementsByTagName('tbody')[0];
+            myLoansTableBody.innerHTML = ''; // Clear existing rows
+
+            loans.forEach((loan) => {
+                const row = myLoansTableBody.insertRow();
+
+                const idCell = row.insertCell(0);
+                idCell.innerText = loan.id;
+
+                const dueDateCell = row.insertCell(1);
+                dueDateCell.innerText = new Date(loan.dueDate * 1000).toLocaleString(); // Convert timestamp to readable date
+
+                const amountCell = row.insertCell(2);
+                amountCell.innerText = loan.amount;
+
+                const lenderInterestCell = row.insertCell(3);
+                lenderInterestCell.innerText = Number(loan.interest) - Number(loan.guarantorInterest);
+
+                const guarantorCell = row.insertCell(4);
+                guarantorCell.innerText = loan.guarantor;
+
+                const borrowerCell = row.insertCell(5);
+                borrowerCell.innerText = loan.borrower;
+
+                const alreadyPaidCell = row.insertCell(6);
+                alreadyPaidCell.innerText = loan.alreadyPaid;
+
+                const lendCell = row.insertCell(7);
+                if(loan.dueDate < Math.floor(Date.now() / 1000) && loan.amount + loan.interest > loan.alreadyPaid) { //comapare to actuall unit timestamp, add if check if it is alread full paid
+                    var claimButton = document.createElement("button");
+                    claimButton.textContent = "Claim funds";
+                    claimButton.addEventListener('click', () => dueDatePasted(loan.id));
+                    lendCell.appendChild(claimButton);
+                } 
+            });
+        } catch (error) {
+            console.error('Error showing my loans:', error);
+            alert('Error showing my loans: ' + error.message);
+        }
+    }
+
+    async function dueDatePasted(loanId) {
+        console.log("claim");
+        try {
+            const loan = await loanContract.loans(loanId);
+
+            const tx = await loanContract.claimCollateral(loanId);
+            await tx.wait();
+
+            alert('Funds claimed successfully!');
+        } catch (error) {
+            console.error('Error claiming funds:', error);
+            alert('Error claiming funds: ' + error.message);
+        }
+    }
+
+</script>
